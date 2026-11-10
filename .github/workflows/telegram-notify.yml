@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - '**/submission-*.py'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -20,22 +21,20 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || 'Manual Telegram test' }}
           COMMIT_SHA: ${{ github.sha }}
-          COMMIT_URL: ${{ github.event.head_commit.url }}
+          COMMIT_URL: ${{ github.event.head_commit.url || format('{0}/{1}/commit/{2}', github.server_url, github.repository, github.sha) }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
             echo "Telegram secrets are not configured. Add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID."
             exit 1
           fi
 
-          MESSAGE="NeetCode solution pushed successfully!%0ARepository: ${REPO}%0ABranch: ${BRANCH}%0ACommit: ${COMMIT_MESSAGE}%0ACommit link: ${COMMIT_URL}"
-
           curl --fail --silent --show-error \
             --request POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=NeetCode solution pushed successfully!
+            --data-urlencode "text=NeetCode solution notification!
 Repository: ${REPO}
 Branch: ${BRANCH}
 Commit: ${COMMIT_MESSAGE}
